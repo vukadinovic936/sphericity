@@ -240,7 +240,7 @@ def segment_papillary(image_path, seg_image_path, thres = 0.35, label=1):
                 masked_image[:,:,cut,frame_id] = np.zeros(frame.shape)
     return image,masked_image
 
-def create_video(orig_image,masked_image,cut=6):
+def create_video(orig_image,masked_image,cut=0):
     fig, ax = plt.subplots()
     plt.close()
     def animator(N): # N is the animation frame number

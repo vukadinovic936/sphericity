@@ -1,0 +1,6 @@
+*.gz
+*.csv
+*.pyc
+*.txt
+*.png
+data

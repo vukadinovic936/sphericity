@@ -1,0 +1,3 @@
+[submodule "ukbb_cardiac"]
+	path = ukbb_cardiac
+	url = https://github.com/vukadinovic936/ukbb_cardiac
