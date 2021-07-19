@@ -1,3 +1,4 @@
+from re import I
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
@@ -140,13 +141,31 @@ def create_video_lv(orig_image,masked_image,shape_properties,cut=0,):
         ax.imshow(orig_image[:,:,cut,N], cmap='gray') # I would add interpolation='none'
         data_masked = np.ma.masked_where(masked_image[:,:,cut,N] == 0, masked_image[:,:,cut,N])
         ax.imshow(data_masked,interpolation = 'none', vmin=0, alpha=0.8)
-        ax.set_title('W='+str(shape_properties[cut,N,0])+
-                     ';H='+str(shape_properties[cut,N,1])+
+        ax.set_title('H='+str(shape_properties[cut,N,0])+
+                     ';W='+str(shape_properties[cut,N,1])+
                      ';A='+str(shape_properties[cut,N,2]))
         return ax
     PlotFrames = range(0,masked_image.shape[3],1)
     anim = animation.FuncAnimation(fig,animator,frames=PlotFrames,interval=100)
     rc('animation', html='jshtml') # embed in the HTML for Google Colab
+    return anim
+
+def create_video_mitral_valve(figs,dists):
+
+    fig, ax = plt.subplots()
+    plt.close()
+    def animator(N): # N is the animation frame number
+        ax.clear()
+        ax.imshow(figs[N][0],cmap='gray')
+        ax.plot([figs[N][1][0]],[figs[N][2][0]],'*',alpha=0.5)
+        ax.plot([figs[N][1][-1]],[figs[N][2][-1]],'*',alpha=0.5)
+        ax.plot(figs[N][1],figs[N][2],'r',alpha=0.8)
+        ax.set_title(dists[N])
+        return ax
+    PlotFrames = range(0,len(figs),1)
+    anim = animation.FuncAnimation(fig,animator,frames=PlotFrames,interval=100)
+    rc('animation', html='jshtml') # embed in the HTML for Google Colab
+
     return anim
 
 def padImage(image,padding=1):
@@ -158,7 +177,7 @@ def unpadImage(image):
     new_image = np.zeros((image.shape[0]-2,image.shape[1]-2))
     new_image = image[1:-1,1:-1]
     return new_image
-	
+
 def border_idx(image,i,j):
     if(i < 0 or i >= image.shape[0]):
         i = 0
@@ -320,6 +339,15 @@ def segment_mitral_valve(image_path, seg_image_path):
             mask = np.zeros(img.shape)
             cont = contours[0]
             rect = cv2.minAreaRect(cont)
+
+            _,(width,height),angle = rect
+
+            width = width*pixdim[0]
+            height = height*pixdim[1]
+            if(width*height < 20):
+                raise ValueError("Segmentation is bad! Box area is too small")
+
+
             box = cv2.boxPoints(rect)
             box = np.int0(box)
             savebox=box
@@ -332,6 +360,14 @@ def segment_mitral_valve(image_path, seg_image_path):
             mask = np.zeros(img.shape)
             cont = contours[0]
             rect = cv2.minAreaRect(cont)
+
+            _,(width,height),angle = rect
+            width = width*pixdim[0]
+            height = height*pixdim[1]
+
+            if(width*height < 20):
+                raise ValueError("Segmentation is bad! Box area is too small")
+
             box = cv2.boxPoints(rect)
             box = np.int0(box)
 
@@ -344,6 +380,9 @@ def segment_mitral_valve(image_path, seg_image_path):
             X = np.linspace(box[2][0]-b,box[2][0],1000)
             
             video_frames.append([frame,X,lvline(X)])
+            if(b != b):
+                raise ValueError("Segmentation is bad! Box area is too small")
+
             distances.append(b*pixdim[0])
 
     return video_frames,distances
@@ -374,7 +413,6 @@ def segment_left_ventricle(image_path, seg_image_path, label=1):
     seg_nim = nib.load(seg_image_path)
     seg_image = seg_nim.get_fdata()
     pixdim = nim.header['pixdim'][1:4] 
-    
     # for loop here
     label=1
     masked_image = np.zeros_like(image)
@@ -395,8 +433,48 @@ def segment_left_ventricle(image_path, seg_image_path, label=1):
             cv2.drawContours(mask,[box], 0,(255,0,0),2)
             _,(width,height),angle = rect
             masked_image[:,:,cut,frame_id] = mask
-            shape_properties[cut,frame_id,0] = width
-            shape_properties[cut,frame_id,1] = height
+            shape_properties[cut,frame_id,0] = width*pixdim[0]
+            shape_properties[cut,frame_id,1] = height*pixdim[0]
             shape_properties[cut,frame_id,2] = angle
-    shape_properties[:,:,0:2] *= pixdim[0]
+
+            if(width*height<20):
+                raise ValueError('Segmentation is bad! Box area is too small')
     return image,masked_image,shape_properties
+
+def segment_right_ventricle(image_path, seg_image_path, label=3):
+    
+    nim = nib.load(image_path)
+    image = nim.get_fdata()
+    seg_nim = nib.load(seg_image_path)
+    seg_image = seg_nim.get_fdata()
+    pixdim = nim.header['pixdim'][1:4] 
+    # for loop here
+    label=3
+    masked_image = np.zeros_like(image)
+    shape_properties = np.zeros((image.shape[2],image.shape[3],3))
+    for cut in range(image.shape[2]):
+        for frame_id in range(image.shape[3]):
+            frame = image[:,:,cut,frame_id]
+            seg_frame = seg_image[:,:,cut,frame_id]
+            img =  (frame) * (seg_frame==label)
+            img = img/np.max(img)
+            imgray = (255*img).astype(np.uint8)
+            contours, hierarchy = cv2.findContours(imgray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            mask=np.zeros(img.shape)
+            cont = contours[0]
+            rect = cv2.minAreaRect(cont)
+            box = cv2.boxPoints(rect)
+            box = np.int0(box)
+            cv2.drawContours(mask,[box], 0,(255,0,0),2)
+            _,(width,height),angle = rect
+            masked_image[:,:,cut,frame_id] = mask
+            shape_properties[cut,frame_id,0] = width*pixdim[0]
+            shape_properties[cut,frame_id,1] = height*pixdim[0]
+            shape_properties[cut,frame_id,2] = angle
+            if(width*height<20):
+                raise ValueError('Segmentation is bad! Box area is too small')
+
+    return image,masked_image,shape_properties
+
+def get_body_surface_area(list,eid):
+    return float(list[ list['eid'] == eid]['22427-2.0'])
