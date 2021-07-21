@@ -1,0 +1,49 @@
+PLINK=/workspace/Milos/PLINK_beta/plink
+for i in {1..22}
+do
+	filename="ukb${i}"
+	phenotype=mitral_distance.phe
+
+	## Check for missing
+	$PLINK --bfile $filename --missing --pheno $phenotype
+	Rscript --no-save hist_miss.R
+
+	$PLINK --bfile $filename --geno 0.2 --make-bed --out "${filename}_2" --pheno $phenotype
+	$PLINK --bfile "${filename}_2" --mind 0.2 --make-bed --out "${filename}_3" --pheno $phenotype
+	$PLINK --bfile "${filename}_3" --geno 0.02 --make-bed --out "${filename}_4" --pheno $phenotype
+	$PLINK --bfile "${filename}_4" --mind 0.02 --make-bed --out "${filename}_5" --pheno $phenotype
+
+	## Check sex discrepancy
+	#plink --bfile "${filename}_5" --check-sex --pheno $phenotype
+	Rscript --no-save gender_check.R
+	grep "PROBLEM" plink.sexcheck| awk '{print$1,$2}'> sex_discrepancy.txt
+	$PLINK --bfile "${filename}_5" --remove sex_discrepancy.txt --make-bed --out "${filename}_6"
+
+	## Select autosomal SNPs only and delete ones with low MAF distribution
+	awk '{ if ($1 >= 1 && $1 <= 22) print $2 }' "${filename}_6.bim" > snp_1_22.txt
+	$PLINK --bfile "${filename}_6" --extract snp_1_22.txt --make-bed --out "${filename}_7"
+	$PLINK --bfile "${filename}_7" --freq --out MAF_check
+	Rscript --no-save MAF_check.R
+	$PLINK --bfile "${filename}_7" --maf 0.05 --make-bed --out "${filename}_8"
+
+	## Hardy-Weinberg equilibrium
+	$PLINK --bfile "${filename}_8" --hardy
+	awk '{ if ($9 <0.00001) print $0 }' plink.hwe>plinkzoomhwe.hwe
+	Rscript --no-save hwe.R
+	$PLINK --bfile  "${filename}_8" --hwe 1e-6 --make-bed --out hwe_filter_step1 --pheno $phenotype
+	$PLINK --bfile hwe_filter_step1 --hwe 1e-10 --hwe-all --make-bed --out  "${filename}_9" --pheno $phenotype
+
+	## Heterozygosity
+	$PLINK --bfile  "${filename}_9" --exclude inversion.txt --range --indep-pairwise 50 5 0.2 --out indepSNP --pheno $phenotype
+	$PLINK --bfile  "${filename}_9" --extract indepSNP.prune.in --het --out R_check --pheno $phenotype
+	Rscript --no-save check_heterozygosity_rate.R
+	Rscript --no-save heterozygosity_outliers_list.R
+	sed 's/"// g' fail-het-qc.txt | awk '{print$1, $2}'> het_fail_ind.txt
+	$PLINK --bfile  "${filename}_9" --remove het_fail_ind.txt --make-bed --out  "${filename}_10"
+	$PLINK --bfile "${filename}_10" --assoc --pheno $phenotype --out "${filename}_res"
+done
+
+cat ukb1_res.qassoc ukb2_res.qassoc ukb3_res.qassoc  ukb4_res.qassoc  ukb5_res.qassoc  ukb6_res.qassoc  ukb7_res.qassoc  ukb8_res.qassoc  ukb9_res.qassoc  ukb10_res.qassoc  ukb11_res.qassoc  ukb12_res.qassoc  ukb13_res.qassoc  ukb14_res.qassoc  ukb15_res.qassoc  ukb16_res.qassoc  ukb17_res.qassoc  ukb18_res.qassoc  ukb19_res.qassoc  ukb20_res.qassoc  ukb21_res.qassoc  ukb22_res.qassoc  > ukb_res.qassoc
+
+Rscript --no-save Manhattan_plot.R
+

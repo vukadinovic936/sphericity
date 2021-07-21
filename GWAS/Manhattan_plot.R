@@ -5,7 +5,7 @@ library("qqman",lib.loc="~")
 #manhattan(results_log,chr="CHR",bp="BP",p="P",snp="SNP", main = "Manhattan plot: logistic")
 #dev.off()
 
-results_as <- read.table("quant1.qassoc", head=TRUE)
+results_as <- read.table("ukb_res.qassoc", head=TRUE)
 jpeg("assoc_manhattan.jpeg")
 manhattan(results_as,chr="CHR",bp="BP",p="P",snp="SNP", main = "Manhattan plot: assoc")
 dev.off()  
