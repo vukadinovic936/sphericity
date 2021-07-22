@@ -1,15 +1,13 @@
 #install.packages("qqman",repos="http://cran.cnr.berkeley.edu/",lib="~" ) # location of installation can be changed but has to correspond with the library location 
-library("qqman",lib.loc="~")  
+
+library("qqman",lib.loc="~") 
 results_log <- read.table("ukb_res.assoc.linear", head=TRUE)
-jpeg("Linear_manhattan.jpeg")
-manhattan(results_log,chr="CHR",bp="BP",p="P",snp="SNP", main = "Manhattan plot: linear")
+jpeg("QQ-Plot_linear.jpeg")
+qq(results_log$P, main = "Q-Q plot of GWAS p-values : log")
 dev.off()
 
 results_as <- read.table("ukb_res.qassoc", head=TRUE)
-jpeg("assoc_manhattan.jpeg")
-manhattan(results_as,chr="CHR",bp="BP",p="P",snp="SNP", main = "Manhattan plot: assoc")
-dev.off()  
-
-
-
+jpeg("QQ-Plot_assoc.jpeg")
+qq(results_as$P, main = "Q-Q plot of GWAS p-values : log")
+dev.off()
 
