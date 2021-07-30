@@ -2,6 +2,7 @@
 ## Rename
 ## Merge X chromosome
 PLINK=/workspace/Milos/PLINK_beta/plink
+
 for i in {1..22}
 do
 
@@ -15,61 +16,72 @@ do
 	$PLINK --bfile "${filename}_3" --geno 0.02 --make-bed --out "${filename}_4"
 	$PLINK --bfile "${filename}_4" --mind 0.02 --make-bed --out "${filename}_5"
 
-	## Check sex discrepancy
+## Check sex discrepancy
 	$PLINK --bfile "${filename}_5" --check-sex
 	Rscript --no-save gender_check.R
 	grep "PROBLEM" plink.sexcheck| awk '{print$1,$2}'> sex_discrepancy.txt
 	$PLINK --bfile "${filename}_5" --remove sex_discrepancy.txt --make-bed --out "${filename}_6"
 
-	## Select autosomal SNPs only and delete ones with low MAF distribution
+## Select autosomal SNPs only and delete ones with low MAF distribution
 	awk '{ if ($1 >= 1 && $1 <= 22) print $2 }' "${filename}_6.bim" > snp_1_22.txt
 	$PLINK --bfile "${filename}_6" --extract snp_1_22.txt --make-bed --out "${filename}_7"
 	$PLINK --bfile "${filename}_7" --freq --out MAF_check
 	Rscript --no-save MAF_check.R
 	$PLINK --bfile "${filename}_7" --maf 0.05 --make-bed --out "${filename}_8"
 
-	## Hardy-Weinberg equilibrium
+## Hardy-Weinberg equilibrium
 	$PLINK --bfile "${filename}_8" --hardy
 	awk '{ if ($9 <0.00001) print $0 }' plink.hwe>plinkzoomhwe.hwe
 	Rscript --no-save hwe.R
 
-	# there are two lines in case you want to apply different threshold for control (next line) 
+# there are two lines in case you want to apply different threshold for control (next line) 
 	$PLINK --bfile  "${filename}_8" --hwe 1e-6 --make-bed --out hwe_filter_step1
 	$PLINK --bfile hwe_filter_step1 --hwe 1e-6 --hwe-all --make-bed --out  "${filename}_9"
 
-	## Heterozygosity
+## Heterozygosity
 	$PLINK --bfile  "${filename}_9" --exclude inversion.txt --range --indep-pairwise 50 5 0.2 --out indepSNP
 	$PLINK --bfile  "${filename}_9" --extract indepSNP.prune.in --het --out R_check
 	Rscript --no-save check_heterozygosity_rate.R
 	Rscript --no-save heterozygosity_outliers_list.R
 	sed 's/"// g' fail-het-qc.txt | awk '{print$1, $2}'> het_fail_ind.txt
 	$PLINK --bfile  "${filename}_9" --remove het_fail_ind.txt --make-bed --out  "${filename}_10"
-done
-
-phenotype=mitral_distance.phe
-## DO GWAS
-for i in {1..22}
-do
-	## plink assoc
-	$PLINK --bfile "${filename}_10" --assoc --pheno $phenotype --out "${filename}_res"
-
-	## plink linear
-	$PLINK --bfile "${filename}_10" --linear --pheno $phenotype --out "${filename}_res"
-	awk '!/'NA'/' "${filename}_res".assoc.linear > "${filename}_res".assoc_2.linear
 end
 
-# Concatenate
-rm ukb_res.qassoc
-cat ukb1_res.qassoc > ukb_res.qassoc
-tail -q -n +2 ukb2_res.qassoc ukb3_res.qassoc  ukb4_res.qassoc  ukb5_res.qassoc  ukb6_res.qassoc  ukb7_res.qassoc  ukb8_res.qassoc  ukb9_res.qassoc  ukb10_res.qassoc  ukb11_res.qassoc  ukb12_res.qassoc  ukb13_res.qassoc  ukb14_res.qassoc  ukb15_res.qassoc  ukb16_res.qassoc  ukb17_res.qassoc  ukb18_res.qassoc  ukb19_res.qassoc  ukb20_res.qassoc  ukb21_res.qassoc  ukb22_res.qassoc  >> ukb_res.qassoc
+for pheno_name in RV_height_ED RV_width_ED RV_hw_ratio_ED RV_angle
+do
+	phenotype=${pheno_name}.phe
 
+	for i in {1..22}
+	do
+		filename="ukb${i}"
+		## plink assoc
+		$PLINK --bfile "${filename}_10" --assoc --pheno $phenotype --out "${filename}_res"
 
-rm ukb_res.assoc.linear
-cat ukb1_res.assoc_2.linear > ukb_res.assoc.linear
-tail -q -n +2 ukb2_res.assoc_2.linear ukb3_res.assoc_2.linear ukb4_res.assoc_2.linear ukb5_res.assoc_2.linear ukb6_res.assoc_2.linear ukb7_res.assoc_2.linear ukb8_res.assoc_2.linear ukb9_res.assoc_2.linear ukb10_res.assoc_2.linear ukb11_res.assoc_2.linear ukb12_res.assoc_2.linear ukb13_res.assoc_2.linear ukb14_res.assoc_2.linear ukb15_res.assoc_2.linear ukb16_res.assoc_2.linear ukb17_res.assoc_2.linear ukb18_res.assoc_2.linear ukb19_res.assoc_2.linear ukb20_res.assoc_2.linear ukb21_res.assoc_2.linear ukb22_res.assoc_2.linear >> ukb_res.assoc.linear
+		## plink linear
+		$PLINK --bfile "${filename}_10" --linear --pheno $phenotype --out "${filename}_res"
+		awk '!/'NA'/' "${filename}_res".assoc.linear > "${filename}_res".assoc_2.linear
+	done
+	### DO GWAS
 
-# Produce plots
-Rscript --no-save Manhattan_plot.R
-Rscript --no-save QQ_plot.R
+	### Concatenate
+	rm ukb_res.qassoc
+	cat ukb1_res.qassoc > ukb_res.qassoc
+	tail -q -n +2 ukb2_res.qassoc ukb3_res.qassoc  ukb4_res.qassoc  ukb5_res.qassoc  ukb6_res.qassoc  ukb7_res.qassoc  ukb8_res.qassoc  ukb9_res.qassoc  ukb10_res.qassoc  ukb11_res.qassoc  ukb12_res.qassoc  ukb13_res.qassoc  ukb14_res.qassoc  ukb15_res.qassoc  ukb16_res.qassoc  ukb17_res.qassoc  ukb18_res.qassoc  ukb19_res.qassoc  ukb20_res.qassoc  ukb21_res.qassoc  ukb22_res.qassoc  >> ukb_res.qassoc
 
-## output *.pdf *.jpeg
+	## remove result files if already exist
+	rm ukb_res.assoc.linear
+	cat ukb1_res.assoc_2.linear > ukb_res.assoc.linear
+
+	# remove header 
+	tail -q -n +2 ukb2_res.assoc_2.linear ukb3_res.assoc_2.linear ukb4_res.assoc_2.linear ukb5_res.assoc_2.linear ukb6_res.assoc_2.linear ukb7_res.assoc_2.linear ukb8_res.assoc_2.linear ukb9_res.assoc_2.linear ukb10_res.assoc_2.linear ukb11_res.assoc_2.linear ukb12_res.assoc_2.linear ukb13_res.assoc_2.linear ukb14_res.assoc_2.linear ukb15_res.assoc_2.linear ukb16_res.assoc_2.linear ukb17_res.assoc_2.linear ukb18_res.assoc_2.linear ukb19_res.assoc_2.linear ukb20_res.assoc_2.linear ukb21_res.assoc_2.linear ukb22_res.assoc_2.linear >> ukb_res.assoc.linear
+
+	## Produce plots
+	Rscript --no-save Manhattan_plot.R
+	Rscript --no-save QQ_plot.R
+
+	## move to the desired location
+#	mv *.jpeg ../UKBB_genetics/GWAS_results/${pheno_name}
+#	mv ukb_res.assoc.linear ../UKBB_genetics/GWAS_results/${pheno_name}
+#	mv ukb_res.qassoc ../UKBB_genetics/GWAS_results/${pheno_name}
+
+done

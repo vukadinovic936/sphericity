@@ -16,13 +16,7 @@ for idx in tqdm(os.listdir("data")):
     seg_image_path = f"{data_dir}/seg4_la_4ch.nii.gz"
     if os.path.exists(image_path) and os.path.exists(seg_image_path):
         try:
-            figs, dists = segment_mitral_valve(image_path, seg_image_path)
-
-            mitral_valve_distance_mean = np.mean(dists)
-            mitral_valve_distance_max = np.max(dists)
-            mitral_valve_distance_min = np.min(dists)
-
-            orig_image, masked_image,shape_properties  = segment_left_ventricle(image_path,seg_image_path)
+            orig_image, masked_image,shape_properties  = segment_right_ventricle(image_path,seg_image_path)
             
             BSA = get_body_surface_area(dataset,int(idx))
             mean_height = np.mean(np.array(shape_properties)[0,:,0])/BSA
@@ -37,8 +31,8 @@ for idx in tqdm(os.listdir("data")):
             min_width = np.min(np.array(shape_properties)[0,:,1])/BSA
             min_angle = np.min(np.array(shape_properties)[0,:,2])/BSA
         
-            with open("LA_traits.csv",'a') as f:
-                f.write(f"{idx},{mitral_valve_distance_mean},{mitral_valve_distance_max},{mitral_valve_distance_min},{mean_height},{max_height},{min_height},{mean_width},{max_width},{min_width},{mean_angle},{max_angle},{min_angle}\n")
+            with open("LA_RV_traits.csv",'a') as f:
+                f.write(f"{idx},{mean_height},{max_height},{min_height},{mean_width},{max_width},{min_width},{mean_angle},{max_angle},{min_angle}\n")
         except ValueError as err:
             print(err.args)
         except:
