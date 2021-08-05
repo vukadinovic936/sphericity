@@ -11,7 +11,7 @@ import pandas as pd
 def create_histogram(vals, title = "", bins=10):
     hi = pd.Series(vals)
     hi.plot.hist(grid=True, bins=bins, rwidth=0.9, color='#607c8e')
-    title = f"{title} n ={str(len(vals))}"
+    title = f"{title}"
     plt.title(title)
     xaxis = "Values"
     plt.xlabel(xaxis)
@@ -141,9 +141,10 @@ def create_video_lv(orig_image,masked_image,shape_properties,cut=0,):
         ax.imshow(orig_image[:,:,cut,N], cmap='gray') # I would add interpolation='none'
         data_masked = np.ma.masked_where(masked_image[:,:,cut,N] == 0, masked_image[:,:,cut,N])
         ax.imshow(data_masked,interpolation = 'none', vmin=0, alpha=0.8)
-        ax.set_title('H='+str(shape_properties[cut,N,0])+
-                     ';W='+str(shape_properties[cut,N,1])+
-                     ';A='+str(shape_properties[cut,N,2]))
+#        ax.set_title('H='+str(shape_properties[cut,N,0])+
+#                     ';W='+str(shape_properties[cut,N,1])+
+#                     ';A='+str(shape_properties[cut,N,2]))
+        ax.axis('off') 
         return ax
     PlotFrames = range(0,masked_image.shape[3],1)
     anim = animation.FuncAnimation(fig,animator,frames=PlotFrames,interval=100)
@@ -160,7 +161,8 @@ def create_video_mitral_valve(figs,dists):
         ax.plot([figs[N][1][0]],[figs[N][2][0]],'*',alpha=0.5)
         ax.plot([figs[N][1][-1]],[figs[N][2][-1]],'*',alpha=0.5)
         ax.plot(figs[N][1],figs[N][2],'r',alpha=0.8)
-        ax.set_title(dists[N])
+        #ax.set_title(dists[N])
+        ax.axis('off')
         return ax
     PlotFrames = range(0,len(figs),1)
     anim = animation.FuncAnimation(fig,animator,frames=PlotFrames,interval=100)
@@ -234,11 +236,14 @@ def segment_papillary(image_path, seg_image_path, thres = 0.35, label=1):
                 mask[mask>0]=1
                 whole_mask = np.zeros_like(frame)
                 whole_mask[top[0]:down[0],left[1]:right[1]] = mask
-
                 masked_image[:,:,cut,frame_id] = whole_mask
             except:
                 masked_image[:,:,cut,frame_id] = np.zeros(frame.shape)
-    return image,masked_image
+
+    nim = nib.load(image_path)
+    pixdim = nim.header['pixdim'][1:4]
+
+    return image,masked_image,pixdim
 
 def create_video(orig_image,masked_image,cut=0):
     fig, ax = plt.subplots()
@@ -247,6 +252,7 @@ def create_video(orig_image,masked_image,cut=0):
         ax.imshow(orig_image[:,:,cut,N], cmap='gray') # I would add interpolation='none'
         data_masked = np.ma.masked_where(masked_image[:,:,cut,N] == 0, masked_image[:,:,cut,N])
         ax.imshow(data_masked,interpolation = 'none', vmin=0, alpha=0.8)
+        ax.axis('off')
         return ax
     PlotFrames = range(0,masked_image.shape[3],1)
     anim = animation.FuncAnimation(fig,animator,frames=PlotFrames,interval=100)
@@ -268,12 +274,9 @@ def make_kernel(size=1):
   return [dx, dx.T]
 
 def get_papillary_mass(image_path,seg_image_path):
-    nim = nib.load(image_path)
-    X,Y,Z,T = image = nim.get_fdata().shape
-    pixdim = nim.header['pixdim'][1:4]
+    image,segmented_image,pixdim = segment_papillary(image_path,seg_image_path)
     volume_per_pix = pixdim[0] * pixdim[1] * pixdim[2] * 1e-3
     density = 1.055
-    image,segmented_image = segment_papillary(image_path,seg_image_path)
     mass_per_frame = np.sum(np.sum(np.sum(segmented_image,axis=0),axis=0),axis=0)*density*volume_per_pix
     return mass_per_frame
 
@@ -478,3 +481,13 @@ def segment_right_ventricle(image_path, seg_image_path, label=3):
 
 def get_body_surface_area(list,eid):
     return float(list[ list['eid'] == eid]['22427-2.0'])
+
+def FirstDeriv(WT):
+    h = 1
+    df = (WT[1:]-WT[:-1]) / h
+    return df
+
+def SecondDeriv(WT):
+    h = 1
+    ddf = (WT[2:] - 2*WT[1:-1] + WT[:-2]) / h**2
+    return ddf
