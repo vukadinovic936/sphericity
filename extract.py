@@ -24,7 +24,7 @@ for idx in tqdm(os.listdir("data/")):
 		print("FILE CORRUPTEd")
 # height max-min
 
-#widht max-min
+# widht max-min
 
 # angle we'll do max-min
 

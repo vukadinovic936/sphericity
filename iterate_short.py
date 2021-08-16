@@ -18,8 +18,6 @@ for idx in tqdm(os.listdir("data")):
         try:
 
             BSA = get_body_surface_area(dataset,int(idx))
-            mass_per_frame = get_papillary_mass(image_path,seg_image_path)/BSA
-            pap_mass_mean = np.mean(mass_per_frame) # mass in g
 
             wt = np.array(evaluate_wall_thickness_per_frame(seg_image_path,return_max=False))/BSA
             max_wt = np.array(evaluate_wall_thickness_per_frame(seg_image_path,return_max=True))/BSA
@@ -27,6 +25,9 @@ for idx in tqdm(os.listdir("data")):
             max_thickness = np.mean(max_wt)
             biggest_change = np.max(FirstDeriv(wt))
             smallest_change = np.min(FirstDeriv(wt)) # in mm
+
+            mass_per_frame = get_papillary_mass(image_path,seg_image_path)/BSA
+            pap_mass_mean = np.mean(mass_per_frame) # mass in g
 
             with open("SA_traits.csv",'a') as f:
                 f.write(f"{idx},{pap_mass_mean},{mean_thickness},{max_thickness},{biggest_change},{smallest_change}\n")

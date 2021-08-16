@@ -25,6 +25,13 @@ def PlotMask(image,mask):
     plt.imshow(data_masked,interpolation = 'none', vmin=0, alpha=0.8)
     plt.show()
 
+def overlap_mask(image,mask):
+    """ Takes image and mask as numpy arrays 
+        and returns a plot """
+    data_masked = np.ma.masked_where(mask==0, mask)
+    plt.imshow(image, cmap='gray')
+    plt.imshow(data_masked, interpolation='none', vmin=0, alpha=0.8)
+
 def dic_to_csv(dic,csv_name):
     with open(csv_name, 'w') as f:
         for key in dic.keys():
@@ -491,3 +498,72 @@ def SecondDeriv(WT):
     h = 1
     ddf = (WT[2:] - 2*WT[1:-1] + WT[:-2]) / h**2
     return ddf
+
+def detect_edges(image, kernel, thresh = 0.1):
+    edges_x = signal.convolve2d(image, kernel[0], 'same')
+    edges_y = signal.convolve2d(image, kernel[1],'same')
+    result = np.sqrt(edges_x**2 + edges_y**2)
+    result = result/(np.max(result) - np.min(result))
+    return result>thresh
+
+def find_bounding_circles(img, predetermined_center=None):
+    dx = np.array([[0,0,0],
+                   [0, -1/2, 1/2],
+                   [0,-0,0]])
+    dy = dx.T
+    kernel=(dx,dy)
+    res = np.array(detect_edges(img,kernel)).astype('uint8').nonzero()
+    center=[0,0]
+
+    if predetermined_center!=None:
+        center=predetermined_center
+    else:
+        center[0] = int(np.mean(img.nonzero()[0]))
+        center[1] = int(np.mean(img.nonzero()[1]))
+
+    center_ar = np.zeros_like(res)
+    center_ar[0]+=center[0]
+    center_ar[1]+=center[1]
+    inner_r = np.min(np.sqrt((center[0]-res[0])**2+(center[1]-res[1])**2))
+    outer_r = np.max(np.sqrt((center[0]-res[0])**2+(center[1]-res[1])**2))
+    return inner_r, outer_r,center
+
+def get_chin(img,seg,plot=False):
+    """
+        Args
+            img numpy array width x height original image
+            seg numpy array width x heigh segmentation
+        Return
+            compaction float
+    """
+    kernel = np.ones((2,2),np.uint8)
+    wall_img = (seg==2).astype('uint8')
+    wall_img = cv2.erode(wall_img,kernel)
+
+    img = (img) * (seg==1)
+    img = ((img/np.max(img))*255).astype(np.uint8)
+    cc = cv2.erode(img,kernel)> 0.55*255
+    mass_pixels = (seg==1).nonzero()
+    predet_center = (int(np.mean(mass_pixels[0])),int(np.mean(mass_pixels[1])))
+    r2,r1,center1 = find_bounding_circles(wall_img,predetermined_center=predet_center)
+    r4,r3,center2 = find_bounding_circles(cc)
+
+    # not r1,r2,r3 are the radia of the circles we have
+
+    if(plot==True):
+        fig,ax = plt.subplots()
+        ax.imshow(cc,cmap='gray')
+        c1 = plt.Circle((center1[1],center1[0]), r1, color='r',fill=False,label=f'{r1}')
+        c2 = plt.Circle( (center2[1],center2[0]), r3, color='b',fill=False,label=f'{r3}')
+        c3 = plt.Circle( (center2[1], center2[0]), r4, color='g',fill=False,label=f'{r4}')
+        #ax.imshow(np.zeros_like(wall_img))
+        ax.add_patch(c1)
+        ax.add_patch(c2)
+        ax.add_patch(c3)
+        ax.legend()
+        fig.show()
+    center_displacement = (center1[0]-center2[0])**2+(center1[1]-center2[1])**2
+    X = r1-r3+center_displacement
+    Y = r1-r4+center_displacement
+
+    return X/Y, (r1-r3)
