@@ -1,0 +1,12 @@
+HAIL_HOME="/data/hail/hail/build/libs"
+spark-submit \
+  --driver-memory 100g \
+  --jars $HAIL_HOME/hail-all-spark.jar \
+  --conf spark.driver.extraClassPath=$HAIL_HOME/hail-all-spark.jar \
+  --conf spark.executor.extraClassPath=./hail-all-spark.jar \
+  --conf spark.serializer=org.apache.spark.serializer.KryoSerializer \
+  --conf spark.kryo.registrator=is.hail.kryo.HailKryoRegistrator \
+  run_gwas.py
+
+#currently running on chr1 without filtering for info
+
