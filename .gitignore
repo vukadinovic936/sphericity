@@ -10,3 +10,10 @@ data
 *.bim
 *checkpoint.ipynb
 *checkpoint.py
+.*
+GWAS_HAIL/*.vds
+GWAS_HAIL/*.vds/*
+GWAS_HAIL/*.kt
+GWAS_HAIL/*.kt/*
+*~
+*.log

@@ -5,9 +5,9 @@ import hail as hl
 # c
 #hc = hail.HailContext()
 # sampddd
-SAMPLE_QC_FILE = 'qc.tsv'
-SAMPLE_QC_TABLE = 'qc.kt' 
-df = hl.import_table("qc.tsv")
+SAMPLE_QC_FILE = "/mnt/i/UKB_DATA/imputed_UKB/qc.tsv"
+SAMPLE_QC_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/qc.kt' 
+df = hl.import_table(SAMPLE_QC_FILE)
 df = df.annotate(PC1 = hl.float64(df['PC1']),
                  PC2 = hl.float64(df['PC2']),
                  PC3 = hl.float64(df['PC3']),
@@ -18,7 +18,7 @@ df = df.annotate(PC1 = hl.float64(df['PC1']),
                  PC8 = hl.float64(df['PC8']),
                  PC9 = hl.float64(df['PC9']),
                  PC10 = hl.float64(df['PC10']),
-                 sample = df['eid'],
+                 eid = df['eid'],
                  in_white_British_ancestry_subset = df['ethnicity'] == "1",
                  used_in_pca_calculation = df['used.in.pca.calculation'] == "1",
                  excess_relatives = df['excess.relatives']=="1",
@@ -26,12 +26,12 @@ df = df.annotate(PC1 = hl.float64(df['PC1']),
                  isFemale = df['Inferred.Gender'] == '0')
 
 #df = df.key_by('sample')
-df = df.filter(df.sample!= "-1")
-df = df.filter(df.sample!= "-2")
-df = df.filter(df.sample!= "-3")
+df = df.filter(df.eid!= "-1")
+df = df.filter(df.eid!= "-2")
+df = df.filter(df.eid!= "-3")
 df = df.filter(df.used_in_pca_calculation==True)
 df = df.filter(df.excess_relatives==False)
-df.select('sample',
+df.select('eid',
            'isFemale',
            'PC1',
            'PC2',
@@ -42,9 +42,8 @@ df.select('sample',
            'PC7',
            'PC8',
            'PC9',
-           'PC10').write('qc.kt',overwrite=True)
+           'PC10').write(SAMPLE_QC_TABLE,overwrite=True)
 
-SAMPLE_QC_TABLE = "qc.kt"
 kt = hl.read_table(SAMPLE_QC_TABLE)
 n_samples = kt.count()
 n_samples

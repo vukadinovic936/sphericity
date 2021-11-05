@@ -20,19 +20,15 @@
 #hdr_file <- args[2]
 #rm(list = ls())
 # no need for fam files we have eid
-sqc_file <- "UK_Biobank_GWAS/imputed-v2-gwas/ukb47972.csv"
+sqc_file <- "/mnt/i/UKB_DATA/main_df/ukb47972.csv"
 #fam_file <- "UK_Biobank_GWAS/imputed-v2-gwas/ukb22418_c5_b0_v2_s488221.fam"
-out_file <- "UK_Biobank_GWAS/imputed-v2-gwas/ukb_qc.txt"
+out_file <- "/mnt/i/UKB_DATA/imputed_UKB/qc.tsv"
 
 # join by ID and rename columns
 library(data.table)
 sqc <- fread(sqc_file,stringsAsFactors=F)
 sqc <- data.frame(sqc)
 colnames(sqc)
-
-names(sqc) <- hd
-colnames(sqc)
-write.table(sqc,out_file,col=T,row=F,quo=F,sep='\t')
 
 hd <- c("eid","batch",
 "Inferred.Gender",
@@ -95,6 +91,12 @@ hd <- c("eid","batch",
 "used_in_phasing_x"                 ,
 "using_in_phasing_xy"               ,
 "some_field"                        )
+
+names(sqc) <- hd
+colnames(sqc)
+write.table(sqc,out_file,col=T,row=F,quo=F,sep='\t')
+
+
 
 #"eid" - "eid"
 #"X22000.0.0" - batch

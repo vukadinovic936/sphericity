@@ -2,16 +2,17 @@ import hail as hl
 from bokeh.io import output_file, save
 from bokeh.layouts import gridplot
 
+#read from files
+PIPELINE_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/pipeline.kt'
+GWAS_VARIANTS_VDS = 'all_variants.vds'
 
-PIPELINE_TABLE = 'pipeline.kt'
+# write to files
 RESULTS_TABLE = 'results.kt' 
-GWAS_VARIANTS_VDS = 'gwas_variants.vds'
 
 pipeline_table = hl.read_table(PIPELINE_TABLE)
-vds = hl.read(GWAS_VARIANTS_VDS)
+vds = hl.read_matrix_table(GWAS_VARIANTS_VDS)
 
-## ANNOTATE ROWS OR COLS ???
-vds.annotate_cols(pheno = hl.read_table(PIPELINE_TABLE))
+vds = vds.annotate_cols(pheno = pipeline_table[vds.s])
 print("LINEAR REG")
 gwas = hl.linear_regression_rows( y = vds.pheno.hw,
                                   x = vds.GT.n_alt_alleles(),
@@ -40,4 +41,4 @@ save(p)
 
 print("WRITE RESULTS")
 gwas.write(RESULTS_TABLE, overwrite=True)
-print("WRITTERN RESULTS")
+print("WRITTEN RESULTS")
