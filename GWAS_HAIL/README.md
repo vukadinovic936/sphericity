@@ -39,7 +39,7 @@ If maintainers changed things, and syntax is different, for this repo to work cl
 Then:
 
 	cd hail/hail
-	make install-on-cluster HAIL_COMPILE_NATIVES1
+	make install-on-cluster HAIL_COMPILE_NATIVES=1
 
 You should be ready to go with the code, for any additional errors, consult the documentation or raise the issue here.
 
