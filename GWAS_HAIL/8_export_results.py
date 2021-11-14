@@ -1,6 +1,6 @@
 import hail as hl
 
-MFI_TABLE = 'mnt/i/UKB_DATA/imputed_UKB/mfi.kt'
+MFI_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/mfi.kt'
 RESULTS_TABLE = 'results.kt'
 EXPORTED_RESULTS = "exported_results.tsv"
 

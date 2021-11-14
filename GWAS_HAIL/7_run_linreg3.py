@@ -4,7 +4,7 @@ from bokeh.layouts import gridplot
 
 #read from files
 PIPELINE_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/pipeline.kt'
-GWAS_VARIANTS_VDS = 'all_variants.vds'
+GWAS_VARIANTS_VDS = 'gwas_variants.vds'
 
 # write to files
 RESULTS_TABLE = 'results.kt' 
