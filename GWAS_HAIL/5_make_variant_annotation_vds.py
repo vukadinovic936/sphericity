@@ -1,9 +1,10 @@
 from __future__ import print_function
 from pprint import pprint
 import hail as hl
-
+import sys
+chr = str(sys.argv[1])
 #reading files
-BGEN_FILES = '/mnt/i/UKB_DATA/imputed_UKB/imputed/ukb22828_c6_b0_v3.bgen/'
+BGEN_FILES = f'/mnt/i/UKB_DATA/imputed_UKB/imputed/ukb22828_c{chr}_b0_v3.bgen/'
 SAMPLE_FILE = "/mnt/i/UKB_DATA/imputed_UKB/imputed/joined.sample"
 MFI_FILE =  '/mnt/i/UKB_DATA/imputed_UKB/ukb_mfi_v3.tsv.bgz'
 QC_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/qc.kt'
@@ -14,8 +15,8 @@ HRC_FILE = '/mnt/i/UKB_DATA/imputed_UKB/HRC.r1-1.GRCh37.wgs.mac5.sites.tab'
 MFI_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/mfi.kt'
 HRC_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/hrc.kt'
 MFI_JOINED = "/mnt/i/UKB_DATA/imputed_UKB/mfi_joined.kt"
-VARIANT_VDS = 'all_variants.vds'
-
+VARIANT_VDS = f'{chr}_all_variants.vds'
+GWAS_VARIANTS_VDS = f'{chr}_gwas_variants.vds'
 #mfi_table = (
 #    hl.import_table(
 #        MFI_FILE,
@@ -74,5 +75,12 @@ hl_samples = hl.str(samples)
 data = data.filter_cols(hl_samples.contains(data.s))
 data = hl.variant_qc(data)
 
-data.write(VARIANT_VDS, overwrite=True)
+data = data.filter_rows(data.mfi.info > 0.8)
+data = data.filter_rows(data.mfi.maf > 0.001)
+data = data.filter_rows(data.variant_qc.AF[1] > 0.001)
+data = data.filter_rows(data.variant_qc.AF[1] < 0.999)
+data = data.filter_rows(data.variant_qc.p_value_hwe > 1e-10)
+data = data.filter_rows(data.variant_qc.call_rate > 0.95)
+
+data.write(GWAS_VARIANTS_VDS, overwrite=True)
 print("DONE WRITING PROCESSED VARIANTS")
