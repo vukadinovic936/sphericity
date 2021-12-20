@@ -1,3 +1,5 @@
+library("survival")
+library("survminer")
 cox_model<- function(csv_name){
   #  Attributes
   #    csv_name : str
@@ -30,7 +32,11 @@ cox_model<- function(csv_name){
              conf.int = TRUE, 
              data=hw_20_80,
              legend.labs=c("Top 80", "Bot 20"),
-             ylim= c(0.95,1.0),
+             ylim= c(0.0,0.1),
+             xlim = c(0,10),
+             xlab="Time from Cardiac MRI (years)",
+             ylab="Cumulative Incidence",
+             fun="event",
              ggtheme = theme_minimal())
   #             risk.table=T, 
   ## saves file to csv_name.png
@@ -43,7 +49,7 @@ cox_model<- function(csv_name){
   summary(res.cox)
 }
 ## MAIN
-cox_model("myocardial_hw.csv")
+#cox_model("myocardial_hw.csv")
 cox_model("cardiomyopathy.csv")
 cox_model("atrial_fibrillation.csv")
 cox_model("heart_failure_date.csv")
