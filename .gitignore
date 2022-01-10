@@ -13,6 +13,8 @@ data
 *checkpoint.ipynb
 *.filepart
 *checkpoint.py
+*.md5
+*.zip
 .*
 GWAS_HAIL/*.vds
 GWAS_HAIL/*.vds/*
