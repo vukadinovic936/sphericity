@@ -10,6 +10,7 @@ data
 *.fam
 *.bed
 *.bim
+*.tsv
 *checkpoint.ipynb
 *.filepart
 *checkpoint.py
@@ -23,3 +24,7 @@ GWAS_HAIL/*.kt/*
 *~
 *.log
 .Rproj.user
+PheWas/patient_diag_filter
+PheWas/patient_diag
+PheWas/70
+PheWas/93
