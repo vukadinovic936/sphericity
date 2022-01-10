@@ -1,7 +1,10 @@
 library("survival")
 library("survminer")
+library("scales")
+library("ggplot2")
 
-csv_name = 'hypertension.csv'
+
+csv_name = 'cardiomyopathy.csv'
 myocardial = read.csv(csv_name)
 ## make time in years
 myocardial['years_without_incident'] = myocardial['days_without_incident']/365
@@ -19,6 +22,15 @@ hw_20_60_20[g1,]['group'] = 1
 hw_20_60_20[g2,]['group'] = 2
 hw_20_60_20[g3,]['group'] = 3
 # now we have groups, how to plot them?
+
+km.fit <- survfit(Surv(years_without_incident, status) ~ group, data = hw_20_60_20)
+km.surv <- ggsurvplot(km.fit,
+                      risk.table = "nrisk_cumevents",
+                      xlim = c(0,10),
+                      risk.table.title="Number at risk (Number of Events)",
+                      legend.labs=c("Bot 20","Mid 60","Top 20"))
+km.surv
+
 res.cox <- coxph(Surv(years_without_incident, status) ~ group + age + sex + BSA, data = hw_20_60_20)
 summary(res.cox)
 hw_df <- with(hw_20_60_20,
@@ -27,19 +39,27 @@ hw_df <- with(hw_20_60_20,
                          age = rep(mean(age,na.rm= TRUE),3),
                          BSA = rep(mean(BSA, na.rm = TRUE),3)
               ))
+
 fit <- survfit(res.cox, newdata = hw_df)
-ggsurvplot(fit, 
+plot <- ggsurvplot(fit, 
            conf.int = TRUE, 
            data=hw_20_60_20,
            legend.labs=c("Bot 20", "Mid 60", "Top 20"),
-           ylim= c(0.0,0.5),
+           ylim= c(0.0,0.01),
            xlim = c(0,10),
            xlab="Time from Cardiac MRI (years)",
-           ylab="Cumulative Incidence",
+           ylab="Cumulative Incidence (%)",
            fun="event",
-           ggtheme = theme_minimal(),
-           risk.table=T) + ggtitle("Hypertension")
-
+           censor=FALSE,
+           risk.table=TRUE,
+           surv.scale = c("percent"),
+           risk.table.col="strata") + ggtitle("Cardiomyopathy")
+plot$table <- km.surv$table
+print(plot, risk.table.height=0.3)
+print(plot)
+# https://github.com/kassambara/survminer/issues/231
+#plot$plot <- plot$plot + 
+#scale_y_continuous(breaks = seq(0,1,by=0.1), labels = seq(0,100,by=10))
 ## saves file to csv_name.png
 #myocardial = read.csv(csv_name)
 #myocardial['norm_hw'] = scale(myocardial['hw'])
