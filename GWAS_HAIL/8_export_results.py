@@ -1,8 +1,8 @@
 import hail as hl
 
 MFI_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/mfi.kt'
-RESULTS_TABLE = 'results.kt'
-EXPORTED_RESULTS = "exported_results.tsv"
+RESULTS_TABLE = 'results_mitral.kt'
+EXPORTED_RESULTS = "exported_results_mitral.tsv"
 
 results = hl.read_table(RESULTS_TABLE)
 

@@ -3,19 +3,22 @@ from bokeh.io import output_file, save
 from bokeh.layouts import gridplot
 
 #read from files
-PIPELINE_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/pipeline.kt'
-GWAS_VARIANTS_VDS = 'gwas_variants.vds'
+PIPELINE_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/pipeline_mitral.kt'
+GWAS_VARIANTS_VDS = '2_gwas_variants.vds'
 #GWAS_VARIANTS_VDS = 'lead_snp.vds'
 
 # write to files
-RESULTS_TABLE = 'results.kt' 
-
+RESULTS_TABLE = 'results_mitral.kt' 
 pipeline_table = hl.read_table(PIPELINE_TABLE)
+
 vds = hl.read_matrix_table(GWAS_VARIANTS_VDS)
+
+for i in range(3,4):
+    vds = vds.union_rows(hl.read_matrix_table(f"{i}_gwas_variants.vds"))
 
 vds = vds.annotate_cols(pheno = pipeline_table[vds.s])
 print("LINEAR REG")
-gwas = hl.linear_regression_rows( y = vds.pheno.hw,
+gwas = hl.linear_regression_rows( y = vds.pheno.pheno,
                                   x = vds.GT.n_alt_alleles(),
                                   covariates = [1.0,
                                                 vds.pheno.isFemale,
