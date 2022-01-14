@@ -4,7 +4,7 @@ library("scales")
 library("ggplot2")
 
 
-csv_name = 'cardiomyopathy.csv'
+csv_name = 'atrial_fibrillation.csv'
 myocardial = read.csv(csv_name)
 ## make time in years
 myocardial['years_without_incident'] = myocardial['days_without_incident']/365
@@ -37,7 +37,9 @@ hw_df <- with(hw_20_60_20,
               data.frame(group = c(1, 2, 3),
                          sex = rep(mean(sex,na.rm = TRUE),3),
                          age = rep(mean(age,na.rm= TRUE),3),
-                         BSA = rep(mean(BSA, na.rm = TRUE),3)
+                         BSA = rep(mean(BSA, na.rm = TRUE),3),
+                         pulse_rate = rep(mean(pulse_rate, na.rm = TRUE),3),
+                         hypertension = rep(mean(hypertension, na.rm = TRUE),3)
               ))
 
 fit <- survfit(res.cox, newdata = hw_df)
@@ -45,7 +47,7 @@ plot <- ggsurvplot(fit,
            conf.int = TRUE, 
            data=hw_20_60_20,
            legend.labs=c("Bot 20", "Mid 60", "Top 20"),
-           ylim= c(0.0,0.01),
+           ylim= c(0.0,0.001),
            xlim = c(0,10),
            xlab="Time from Cardiac MRI (years)",
            ylab="Cumulative Incidence (%)",
@@ -53,7 +55,7 @@ plot <- ggsurvplot(fit,
            censor=FALSE,
            risk.table=TRUE,
            surv.scale = c("percent"),
-           risk.table.col="strata") + ggtitle("Cardiomyopathy")
+           risk.table.col="strata") + ggtitle("Atrial Fibrillation")
 plot$table <- km.surv$table
 print(plot, risk.table.height=0.3)
 print(plot)

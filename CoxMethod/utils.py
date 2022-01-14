@@ -47,7 +47,7 @@ def prepare_for_cox(incident_id):
     df3 = pd.read_csv("hw_ukb47615.csv")
     # merge df2 and df3 to get all the data
     df = pd.merge( pd.merge(df2[['eid','53-0.0','40000-0.0', '21003-0.0', '31-0.0', '22427-2.0' ]],
-                            df3[['eid',incident_id]],on='eid'),
+                            df3[['eid',incident_id, '131286-0.0','102-0.0']],on='eid'),
                             pheno[['eid','hw']],on='eid' )
 
     # rename columns appropriately
@@ -56,7 +56,19 @@ def prepare_for_cox(incident_id):
                             '21003-0.0':"age",
                             "31-0.0": "sex",
                             "22427-2.0": "BSA",
-                            incident_id: 'event_date'})
+                            incident_id: 'event_date',
+                            "131286-0.0": 'hypertension',
+                            "102-0.0": "pulse_rate"
+                            })
+
+    # hypertension field checks if a person was diagnosed before the MRI date
+    # 1 - diagnosed before MRI
+    # 0 - not diagnosed or diagnosed after MRI
+    df['hypertension'] = df['hypertension'].fillna("2021-03-31")
+    new_hyper = []
+    for i in range(len(df)):
+        new_hyper.append(comes_after(df['first_visit_date'][i],df['hypertension'][i])) 
+    df['hypertension'] = np.array(new_hyper, dtype='uint8')
 
     # add last const date
     df['CONST_DATE']="2021-03-31"

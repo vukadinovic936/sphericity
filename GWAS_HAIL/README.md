@@ -48,3 +48,14 @@ Go to the file gwas.rc and set HAIL_HOME the path to your build/libs folder (the
 For example mine is:
 
 	HAIL_HOME="/mnt/d/hail/hail/build/libs"
+
+## Run GWAS
+Follow the steps 1-8
+1_merge_mfi.sh - Merges mfi files accross chromosomes that contain Imputation MAF+info. 
+2_fam_sqc_merge.R - merges quality check files
+3_make_sample_qc_table.py - make a hail table pull important columns
+4_build_pipelines.py - build a pipeline from phenotype data
+5_make_variant_annotation_vds.py - filter snps
+7_run_linreg3.py - run gwas, generate manhattan and qqplot, and save results
+8_export_results.py - export results to tsv file with the following columns:
+locus,alleles_n, sum_x, y_transpose_x, beta, standard_error, t_stat, p_value, v, chr, rsid, pos, ref, alt, maf, info

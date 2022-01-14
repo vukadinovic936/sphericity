@@ -28,3 +28,5 @@ PheWas/patient_diag_filter
 PheWas/patient_diag
 PheWas/70
 PheWas/93
+*.rds
+*.rda
