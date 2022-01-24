@@ -1,20 +1,22 @@
 import hail as hl
 from bokeh.io import output_file, save
 from bokeh.layouts import gridplot
+import sys
 
+pheno = str(sys.argv).split(',')[1].split("'")[1]
 #read from files
-PIPELINE_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/pipeline_mitral.kt'
-GWAS_VARIANTS_VDS = '2_gwas_variants.vds'
-#GWAS_VARIANTS_VDS = 'lead_snp.vds'
+PIPELINE_TABLE = f'/mnt/i/UKB_DATA/pipelines/{pheno}.kt'
+#GWAS_VARIANTS_VDS = '1_gwas_variants.vds'
+GWAS_VARIANTS_VDS = 'lead_snp.vds'
 
 # write to files
-RESULTS_TABLE = 'results_mitral.kt' 
+RESULTS_TABLE = f'results_{pheno}.kt' 
 pipeline_table = hl.read_table(PIPELINE_TABLE)
 
 vds = hl.read_matrix_table(GWAS_VARIANTS_VDS)
 
-for i in range(3,4):
-    vds = vds.union_rows(hl.read_matrix_table(f"{i}_gwas_variants.vds"))
+#for i in range(2,22):
+#    vds = vds.union_rows(hl.read_matrix_table(f"{i}_gwas_variants.vds"))
 
 vds = vds.annotate_cols(pheno = pipeline_table[vds.s])
 print("LINEAR REG")

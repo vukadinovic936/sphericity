@@ -1,9 +1,15 @@
 import hail as hl
+import os
+import sys
+import shutil
+pheno = str(sys.argv).split(',')[1].split("'")[1]
 
 MFI_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/mfi.kt'
-RESULTS_TABLE = 'results_mitral.kt'
-EXPORTED_RESULTS = "exported_results_mitral.tsv"
-
+RESULTS_TABLE = f'results_{pheno}.kt'
+os.mkdir(f"/mnt/i/UKB_DATA/results/{pheno}")
+shutil.move("man.html", f"/mnt/i/UKB_DATA/results/{pheno}/man.html")
+shutil.move("qq_plot.html", f"/mnt/i/UKB_DATA/results/{pheno}/qq.html")
+EXPORTED_RESULTS = f"/mnt/i/UKB_DATA/results/{pheno}/exported_results.tsv"
 results = hl.read_table(RESULTS_TABLE)
 
 mfi_table = hl.read_table(MFI_TABLE)
