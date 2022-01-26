@@ -18,15 +18,15 @@ library(tidyverse)
 #results
 
 
-df <- read_csv("w_phewas_results.csv")
+df <- read_csv("phewas_results.csv")
 class(df$phecode)
 names(df)[names(df) == 'phecode'] <- 'phenotype'
 names(df)[names(df) == 'ccs'] <- 'beta'
 names(df)[names(df) == 'p_vals'] <- 'p'
 df['type']<-c(rep('logistic', nrow(df)))
 df['bonferroni']<-c(rep(FALSE, nrow(df)))
-df['OR'] <- c(df['beta']>0)
-phewas_plot <- phewasManhattan(df, OR.direction = T, title="LVAR PheWAS", annotate.size=3, significant.line = 2.6795e-5, suggestive.line=NA)
+df['OR'] <- exp(df['beta'])
+phewas_plot <- phewasManhattan(df, OR.direction = T, title="Left Ventricle Width PheWAS", annotate.size=3, significant.line = 2.6795e-5, suggestive.line=NA)
 phewas_plot
 
 

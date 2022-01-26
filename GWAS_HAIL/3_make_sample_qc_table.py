@@ -29,6 +29,7 @@ df = df.annotate(PC1 = hl.float64(df['PC1']),
 df = df.filter(df.eid!= "-1")
 df = df.filter(df.eid!= "-2")
 df = df.filter(df.eid!= "-3")
+df = df.filter(df.in_white_British_ancestry_subset==True)
 df = df.filter(df.used_in_pca_calculation==True)
 df = df.filter(df.excess_relatives==False)
 df.select('eid',

@@ -252,12 +252,12 @@ def segment_papillary(image_path, seg_image_path, thres = 0.35, label=1):
 
     return image,masked_image,pixdim
 
-def create_video(orig_image,masked_image,cut=0):
+def create_video(orig_image,masked_image,cut=0, label=0):
     fig, ax = plt.subplots()
     plt.close()
     def animator(N): # N is the animation frame number
         ax.imshow(orig_image[:,:,cut,N], cmap='gray') # I would add interpolation='none'
-        data_masked = np.ma.masked_where(masked_image[:,:,cut,N] == 0, masked_image[:,:,cut,N])
+        data_masked = np.ma.masked_where(masked_image[:,:,cut,N] == label, masked_image[:,:,cut,N])
         ax.imshow(data_masked,interpolation = 'none', vmin=0, alpha=0.8)
         ax.axis('off')
         return ax
@@ -266,6 +266,19 @@ def create_video(orig_image,masked_image,cut=0):
     rc('animation', html='jshtml') # embed in the HTML for Google Colab
     return anim
 
+def create_lv_seg_video(orig_image,masked_image,cut=0):
+    fig, ax = plt.subplots()
+    plt.close()
+    def animator(N): # N is the animation frame number
+        ax.imshow(orig_image[:,:,cut,N], cmap='gray') # I would add interpolation='none'
+        data_masked = np.ma.masked_where(masked_image[:,:,cut,N] != 1, masked_image[:,:,cut,N])
+        ax.imshow(data_masked,interpolation = 'none', vmin=0, alpha=0.8)
+        ax.axis('off')
+        return ax
+    PlotFrames = range(0,masked_image.shape[3],1)
+    anim = animation.FuncAnimation(fig,animator,frames=PlotFrames,interval=100)
+    rc('animation', html='jshtml') # embed in the HTML for Google Colab
+    return anim
 def make_kernel(size=1):
   side = 1 + 2*size
   dx = np.zeros((side, side))

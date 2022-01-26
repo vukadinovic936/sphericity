@@ -4,12 +4,13 @@ library("scales")
 library("ggplot2")
 
 
-csv_name = 'atrial_fibrillation.csv'
+csv_name = 'heart_failure_date.csv'
 myocardial = read.csv(csv_name)
 ## make time in years
 myocardial['years_without_incident'] = myocardial['days_without_incident']/365
 ## split in lower 20 percentile mid 60 and top 20
 hw_20_60_20 <- myocardial
+hw_20_60_20['hw'] = 1/hw_20_60_20['hw']
 hw_20_60_20['norm_hw']=scale(hw_20_60_20['hw'])
 p_20 <- quantile(hw_20_60_20$norm_hw, probs = 0.2)
 p_80 <- quantile(hw_20_60_20$norm_hw, probs = 0.8)
@@ -18,9 +19,9 @@ hw_20_60_20['group'] = 0
 g1 <- c(hw_20_60_20['norm_hw']<=p_20)
 g2 <- c( (hw_20_60_20['norm_hw']>p_20 & hw_20_60_20['norm_hw'] < p_80 ))
 g3 <- c(hw_20_60_20['norm_hw'] >= p_80)
-hw_20_60_20[g1,]['group'] = 1
+hw_20_60_20[g1,]['group'] = 3
 hw_20_60_20[g2,]['group'] = 2
-hw_20_60_20[g3,]['group'] = 3
+hw_20_60_20[g3,]['group'] = 1
 # now we have groups, how to plot them?
 
 km.fit <- survfit(Surv(years_without_incident, status) ~ group, data = hw_20_60_20)
@@ -28,10 +29,10 @@ km.surv <- ggsurvplot(km.fit,
                       risk.table = "nrisk_cumevents",
                       xlim = c(0,10),
                       risk.table.title="Number at risk (Number of Events)",
-                      legend.labs=c("Bot 20","Mid 60","Top 20"))
+                      legend.labs=c("Top 20","Mid 60","Bot 20"))
 km.surv
 
-res.cox <- coxph(Surv(years_without_incident, status) ~ group + age + sex + BSA, data = hw_20_60_20)
+res.cox <- coxph(Surv(years_without_incident, status) ~ group + age + sex + BSA + pulse_rate + hypertension, data = hw_20_60_20)
 summary(res.cox)
 hw_df <- with(hw_20_60_20,
               data.frame(group = c(1, 2, 3),
@@ -46,8 +47,8 @@ fit <- survfit(res.cox, newdata = hw_df)
 plot <- ggsurvplot(fit, 
            conf.int = TRUE, 
            data=hw_20_60_20,
-           legend.labs=c("Bot 20", "Mid 60", "Top 20"),
-           ylim= c(0.0,0.001),
+           legend.labs=c("Top 20", "Mid 60", "Bot 20"),
+           ylim= c(0.0,0.01),
            xlim = c(0,10),
            xlab="Time from Cardiac MRI (years)",
            ylab="Cumulative Incidence (%)",
@@ -55,7 +56,7 @@ plot <- ggsurvplot(fit,
            censor=FALSE,
            risk.table=TRUE,
            surv.scale = c("percent"),
-           risk.table.col="strata") + ggtitle("Atrial Fibrillation")
+           risk.table.col="strata") + ggtitle("Heart Failure")
 plot$table <- km.surv$table
 print(plot, risk.table.height=0.3)
 print(plot)
