@@ -461,7 +461,42 @@ def segment_left_ventricle(image_path, seg_image_path, label=1):
             shape_properties[cut,frame_id,2] = angle
 
             if(width*height<20):
+                print(f"Width {width}\n Height {height} \n Frame_Id {frame_id} \n VideoId{image_path}")
                 raise ValueError('Segmentation is bad! Box area is too small')
+    return image,masked_image,shape_properties
+
+def segment_left_ventricle_ED(image_path, seg_image_path, label=1, qc=True):
+    
+    nim = nib.load(image_path)
+    image = nim.get_fdata()
+    seg_nim = nib.load(seg_image_path)
+    seg_image = seg_nim.get_fdata()
+    pixdim = nim.header['pixdim'][1:4] 
+    label=1
+    masked_image = np.zeros_like(image)
+    shape_properties = np.zeros(3)
+    frame = image
+    seg_frame = seg_image
+    img =  (frame) * (seg_frame==label)
+    img = img/np.max(img)
+    imgray = (255*img).astype(np.uint8)
+    contours, hierarchy = cv2.findContours(imgray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    mask=np.zeros(img.shape)
+    cont = max(contours, key = cv2.contourArea)
+    rect = cv2.minAreaRect(cont)
+    box = cv2.boxPoints(rect)
+    box = np.int0(box)
+    cv2.drawContours(mask,[box], 0,(255,0,0),2)
+    _,(width,height),angle = rect
+    masked_image = mask
+    shape_properties[0] = width*pixdim[0]
+    shape_properties[1] = height*pixdim[0]
+    shape_properties[2] = angle
+
+    if(qc and width*height<20):
+        print(f"Width {width}\n Height {height} \n Frame_Id {0} \n VideoId{image_path}")
+        raise ValueError('Segmentation is bad! Box area is too small')
+
     return image,masked_image,shape_properties
 
 def segment_right_ventricle(image_path, seg_image_path, label=3):
@@ -502,6 +537,8 @@ def segment_right_ventricle(image_path, seg_image_path, label=3):
 def get_body_surface_area(list,eid):
     return float(list[ list['eid'] == eid]['22427-2.0'])
 
+def get_BMI(list,eid):
+    return float(list[ list['eid'] == eid]['22427-2.0'])
 def FirstDeriv(WT):
     h = 1
     df = (WT[1:]-WT[:-1]) / h
