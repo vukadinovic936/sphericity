@@ -8,6 +8,10 @@ from scipy import signal
 from matplotlib import animation, rc
 import pandas as pd
 
+def remove_unnamed(df):
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    return df
+    
 def create_histogram(vals, title = "", bins=10):
     hi = pd.Series(vals)
     hi.plot.hist(grid=True, bins=bins, rwidth=0.9, color='#607c8e')
@@ -489,6 +493,11 @@ def segment_left_ventricle_ED(image_path, seg_image_path, label=1, qc=True):
     cv2.drawContours(mask,[box], 0,(255,0,0),2)
     _,(width,height),angle = rect
     masked_image = mask
+    # height is the greater side
+    if width > height:
+        temp=width
+        width=height
+        height=temp
     shape_properties[0] = width*pixdim[0]
     shape_properties[1] = height*pixdim[0]
     shape_properties[2] = angle
@@ -538,7 +547,10 @@ def get_body_surface_area(list,eid):
     return float(list[ list['eid'] == eid]['22427-2.0'])
 
 def get_BMI(list,eid):
-    return float(list[ list['eid'] == eid]['22427-2.0'])
+    try:
+        return float(list[ list['eid'] == eid]['21001-0.0'])
+    except:
+        return np.mean(list['21001-0.0'])
 def FirstDeriv(WT):
     h = 1
     df = (WT[1:]-WT[:-1]) / h

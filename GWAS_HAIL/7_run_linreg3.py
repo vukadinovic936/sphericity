@@ -6,24 +6,26 @@ import sys
 pheno = str(sys.argv).split(',')[1].split("'")[1]
 #read from files
 PIPELINE_TABLE = f'/mnt/i/UKB_DATA/pipelines/{pheno}.kt'
-#GWAS_VARIANTS_VDS = '1_gwas_variants.vds'
-GWAS_VARIANTS_VDS = 'lead_snp.vds'
+GWAS_VARIANTS_VDS = '1_gwas_variants.vds'
+#GWAS_VARIANTS_VDS = 'lead_snp.vds'
 
 # write to files
 RESULTS_TABLE = f'results_{pheno}.kt' 
 pipeline_table = hl.read_table(PIPELINE_TABLE)
-
+pipeline_table=pipeline_table.key_by("eid")
 vds = hl.read_matrix_table(GWAS_VARIANTS_VDS)
-
-#for i in range(2,22):
-#    vds = vds.union_rows(hl.read_matrix_table(f"{i}_gwas_variants.vds"))
+##
+for i in range(2,22):
+    vds = vds.union_rows(hl.read_matrix_table(f"{i}_gwas_variants.vds"))
 
 vds = vds.annotate_cols(pheno = pipeline_table[vds.s])
+print(f"count is {vds.count()}")
 print("LINEAR REG")
 gwas = hl.linear_regression_rows( y = vds.pheno.pheno,
                                   x = vds.GT.n_alt_alleles(),
                                   covariates = [1.0,
                                                 vds.pheno.isFemale,
+                                                vds.pheno.age_at_MRI,
                                                 vds.pheno.PC1,
                                                 vds.pheno.PC2,
                                                 vds.pheno.PC3,

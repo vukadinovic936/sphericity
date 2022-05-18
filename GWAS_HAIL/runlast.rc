@@ -1,0 +1,2 @@
+HAIL_HOME="/mnt/d/hail/hail/build/libs"
+spark-submit --conf spark.executor.extraClassPath=./hail-all-spark.jar --conf spark.driver.extraClassPath=$HAIL_HOME/hail-all-spark.jar --jars $HAIL_HOME/hail-all-spark.jar --driver-memory 100g --conf spark.serializer=org.apache.spark.serializer.KryoSerializer --conf spark.kryo.registrator=is.hail.kryo.HailKryoRegistrator 8_export_results.py sphericity_index

@@ -64,7 +64,7 @@ GWAS_VARIANTS_VDS = f'{chr}_gwas_variants.vds'
 #
 ### Process BGEN
 # no hrc
-mfi_joined = hl.read_table(MFI_JOINED)
+mfi_joined = hl.read_table(MFI_TABLE)
 mfi_joined = mfi_joined.key_by('rsid')
 bgen = hl.import_bgen(path = BGEN_FILES,
                       sample_file= SAMPLE_FILE, entry_fields=['GT', 'GP','dosage'])
@@ -75,12 +75,14 @@ hl_samples = hl.str(samples)
 data = data.filter_cols(hl_samples.contains(data.s))
 data = hl.variant_qc(data)
 
-data = data.filter_rows(data.mfi.info > 0.8)
-data = data.filter_rows(data.mfi.maf > 0.001)
+data = data.filter_rows(data.mfi.info >= 0.3)
+data = data.filter_rows(data.mfi.maf >= 0.01)
 data = data.filter_rows(data.variant_qc.AF[1] > 0.001)
 data = data.filter_rows(data.variant_qc.AF[1] < 0.999)
-data = data.filter_rows(data.variant_qc.p_value_hwe > 1e-10)
-data = data.filter_rows(data.variant_qc.call_rate > 0.95)
-
+data = data.filter_rows(data.variant_qc.p_value_hwe >= 1e-20)
+data = data.filter_rows(data.variant_qc.call_rate >= 0.95)
+data = hl.sample_qc(data)
+data = data.filter_cols( (data.sample_qc.call_rate >= 0.98 ))
 data.write(GWAS_VARIANTS_VDS, overwrite=True)
 print("DONE WRITING PROCESSED VARIANTS")
+
