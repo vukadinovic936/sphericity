@@ -4,14 +4,13 @@ library("scales")
 library("ggplot2")
 
 
-csv_name = 'heart_failure_date.csv'
+csv_name = 'cardiac_arrest.csv'
 myocardial = read.csv(csv_name)
 ## make time in years
 myocardial['years_without_incident'] = myocardial['days_without_incident']/365
 ## split in lower 20 percentile mid 60 and top 20
 hw_20_60_20 <- myocardial
-hw_20_60_20['hw'] = 1/hw_20_60_20['hw']
-hw_20_60_20['norm_hw']=scale(hw_20_60_20['hw'])
+hw_20_60_20['norm_hw']=hw_20_60_20['pheno']
 p_20 <- quantile(hw_20_60_20$norm_hw, probs = 0.2)
 p_80 <- quantile(hw_20_60_20$norm_hw, probs = 0.8)
 # 1 will stand for bottom 20, 2 for mid 60 and 3 for top 20
@@ -32,13 +31,13 @@ km.surv <- ggsurvplot(km.fit,
                       legend.labs=c("Top 20","Mid 60","Bot 20"))
 km.surv
 
-res.cox <- coxph(Surv(years_without_incident, status) ~ group + age + sex + BSA + pulse_rate + hypertension, data = hw_20_60_20)
+res.cox <- coxph(Surv(years_without_incident, status) ~ group + age + sex + BMI + pulse_rate + hypertension, data = hw_20_60_20)
 summary(res.cox)
 hw_df <- with(hw_20_60_20,
               data.frame(group = c(1, 2, 3),
                          sex = rep(mean(sex,na.rm = TRUE),3),
                          age = rep(mean(age,na.rm= TRUE),3),
-                         BSA = rep(mean(BSA, na.rm = TRUE),3),
+                         BMI = rep(mean(BMI, na.rm = TRUE),3),
                          pulse_rate = rep(mean(pulse_rate, na.rm = TRUE),3),
                          hypertension = rep(mean(hypertension, na.rm = TRUE),3)
               ))
@@ -48,7 +47,7 @@ plot <- ggsurvplot(fit,
            conf.int = TRUE, 
            data=hw_20_60_20,
            legend.labs=c("Top 20", "Mid 60", "Bot 20"),
-           ylim= c(0.0,0.01),
+           ylim= c(0.0,0.001),
            xlim = c(0,10),
            xlab="Time from Cardiac MRI (years)",
            ylab="Cumulative Incidence (%)",
@@ -56,7 +55,7 @@ plot <- ggsurvplot(fit,
            censor=FALSE,
            risk.table=TRUE,
            surv.scale = c("percent"),
-           risk.table.col="strata") + ggtitle("Heart Failure")
+           risk.table.col="strata") + ggtitle("Cardiac Arrest")
 plot$table <- km.surv$table
 print(plot, risk.table.height=0.3)
 print(plot)

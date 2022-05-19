@@ -18,7 +18,7 @@ library(tidyverse)
 #results
 
 
-df <- read_csv("phewas_results.csv")
+df <- read_csv("C:/Users/VukadinoviM/Documents/Beyond_Size/G_results/PheWas/BSA_lv_width/results.csv")
 class(df$phecode)
 names(df)[names(df) == 'phecode'] <- 'phenotype'
 names(df)[names(df) == 'ccs'] <- 'beta'
@@ -26,7 +26,7 @@ names(df)[names(df) == 'p_vals'] <- 'p'
 df['type']<-c(rep('logistic', nrow(df)))
 df['bonferroni']<-c(rep(FALSE, nrow(df)))
 df['OR'] <- exp(df['beta'])
-phewas_plot <- phewasManhattan(df, OR.direction = T, title="Left Ventricle Width PheWAS", annotate.size=3, significant.line = 2.6795e-5, suggestive.line=NA)
+phewas_plot <- phewasManhattan(df, OR.direction = T, title="LV Length PheWAS", annotate.size=3, significant.line = 2.6795e-5, suggestive.line=NA)
 phewas_plot
 
 

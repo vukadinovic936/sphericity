@@ -41,14 +41,15 @@ def prepare_for_cox(incident_id):
         incident.csv : csv file
             csv file with all necessary info to make Cox Model in R
     """
-    pheno = pd.read_csv("hwpheno.csv")
+    pheno = pd.read_csv("C:/Users/VukadinoviM/Documents/Beyond_Size/phenotypes/sphericity_index.tsv",sep='\t')
     pheno['eid'] = pheno['idx']
-    df2 = pd.read_csv("hw_ukb45494.csv")
-    df3 = pd.read_csv("hw_ukb47615.csv")
+    df2 = pd.read_csv("C:/Users/VukadinoviM/Documents/Beyond_Size/small_datasets/si_ukb45494.csv")
+    df3 = pd.read_csv("C:/Users/VukadinoviM/Documents/Beyond_Size/small_datasets/si_ukb47615.csv")
+    df4 = pd.read_csv("C:/Users/VukadinoviM/Documents/Beyond_Size/small_datasets/BMI.csv")
     # merge df2 and df3 to get all the data
-    df = pd.merge( pd.merge(df2[['eid','53-0.0','40000-0.0', '21003-0.0', '31-0.0', '22427-2.0' ]],
+    df = pd.merge( pd.merge( pd.merge(df2[['eid','53-0.0','40000-0.0', '21003-0.0', '31-0.0', '22427-2.0' ]],
                             df3[['eid',incident_id, '131286-0.0','102-0.0']],on='eid'),
-                            pheno[['eid','hw']],on='eid' )
+                            pheno[['eid','pheno']],on='eid' ), df4[['eid','21001-0.0']], on='eid' )
 
     # rename columns appropriately
     df = df.rename(columns={'53-0.0': 'first_visit_date',
@@ -58,7 +59,8 @@ def prepare_for_cox(incident_id):
                             "22427-2.0": "BSA",
                             incident_id: 'event_date',
                             "131286-0.0": 'hypertension',
-                            "102-0.0": "pulse_rate"
+                            "102-0.0": "pulse_rate",
+                            "21001-0.0": "BMI"
                             })
 
     # hypertension field checks if a person was diagnosed before the MRI date
@@ -99,7 +101,7 @@ def prepare_for_cox(incident_id):
 
     df['days_without_incident'] = days_without_incident
     df['status'] = status
-    df = df[df.days_without_incident != -1]
+#    df = df[df.days_without_incident != -1]
     df.to_csv(f"{ id_dict[incident_id]}.csv")
 
 
