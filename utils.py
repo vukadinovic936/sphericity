@@ -681,4 +681,4 @@ def length_papillary(image_path, seg_image_path, thres = 0.35, label=1):
     return image,masked_image,pixdim, length
    
 def strain_papillary(l_0,l_1):
-    return (l_1-l_0)/
+    return (l_1-l_0)/l_0
