@@ -1,7 +1,13 @@
-import pandas as pd
+from re import I
+import nibabel as nib
 import numpy as np
-import math
-from datetime import date
+import matplotlib.pyplot as plt
+import cv2
+from PIL import Image
+from scipy import signal
+from matplotlib import animation, rc
+import pandas as pd
+
 id_dict = {"131338-0.0":"cardiomyopathy",
         "131350-0.0":"atrial_fibrillation",
         "131354-0.0":"heart_failure_date",
@@ -47,7 +53,7 @@ def prepare_for_cox(incident_id):
     df3 = pd.read_csv("C:/Users/VukadinoviM/Documents/Beyond_Size/small_datasets/si_ukb47615.csv")
     df4 = pd.read_csv("C:/Users/VukadinoviM/Documents/Beyond_Size/small_datasets/BMI.csv")
     # merge df2 and df3 to get all the data
-    df = pd.merge( pd.merge( pd.merge(df2[['eid','53-0.0','40000-0.0', '21003-0.0', '31-0.0', '22427-2.0' ]],
+    df = pd.merge( pd.merge( pd.merge(df2[['eid','53-0.0','40000-0.0', '21003-0.0', '31-0.0', '22427-2.0', 'length', 'width' ]],
                             df3[['eid',incident_id, '131286-0.0','102-0.0']],on='eid'),
                             pheno[['eid','pheno']],on='eid' ), df4[['eid','21001-0.0']], on='eid' )
 
@@ -104,6 +110,58 @@ def prepare_for_cox(incident_id):
 #    df = df[df.days_without_incident != -1]
     df.to_csv(f"{ id_dict[incident_id]}.csv")
 
+def length_papillary(image_path, seg_image_path, thres = 0.35, label=1):
+    """
+    - Calculates length of papillary muscle 
+    - Run on end-diastolic and end-systolic images individually 
+    to calculate strain later
+    - Returns image, mask, dimension, and length 
+    TO-DO: Think about QC if end-diastolic and -systolic images are not clear
+    """
+    nim = nib.load(image_path)
+    image = nim.get_fdata()
+    seg_nim = nib.load(seg_image_path)
+    seg_image = seg_nim.get_fdata()
+    length=[]
+    cnt=0
+    masked_image = np.zeros_like(image)
+    frame = image
+    seg_frame = seg_image
+    img,top,left,right,down = focus( (frame) * (seg_frame==label))
+    img=img / np.max(img)
+    thresh_img = np.copy(img)
+    thresh_img[thresh_img<thres]=0
+    imgray = (255*thresh_img).astype(np.uint8)
+    
+    # Create hull and calculate length
+    contours, hierarchy = cv2.findContours(imgray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours = Reverse(sorted(contours, key = len))
+    cont=contours[0]
+    hull = cv2.convexHull(cont, returnPoints=True)
+    hull = np.int0(hull)
+    length = cv2.arcLength(hull,False)
+    
+    # Create segmentation 
+    blank1 = np.zeros((img.shape[0],img.shape[1]))
+    blank2 = np.zeros((img.shape[0],img.shape[1]))
+    cv2.drawContours(blank1,[hull],-1,(147,0,255),thickness=1) 
+    cv2.drawContours(blank2,[hull],-1,(147,0,255),thickness=cv2.FILLED) 
+    mask = np.copy(img)
+    mask[(blank2-blank1)==0] =0
+    mask[img>thres]=0
+    mask[mask>0]=1
+    whole_mask = np.zeros_like(frame)
+    whole_mask[top[0]:down[0],left[1]:right[1]] = mask
+    masked_image = whole_mask
+    
+    # Get dimensions 
+    nim = nib.load(image_path)
+    pixdim = nim.header['pixdim'][1:4]
+    print(nim.header.get_zooms()[-1])
+    return image,masked_image,pixdim, length
+   
+def strain_papillary(l_0,l_1):
+    return (l_1-l_0)/
 
     
    
