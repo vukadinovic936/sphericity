@@ -1,0 +1,5 @@
+python munge_sumstats.py \
+--sumstats data/exported_results.txt \
+--N 44646 \
+--out si \
+--merge-alleles data/w_hm3.snplist \

@@ -2,6 +2,9 @@ import hail as hl
 import os
 import sys
 import shutil
+import pandas as pd
+import numpy as np
+
 pheno = str(sys.argv).split(',')[1].split("'")[1]
 
 MFI_TABLE = '/mnt/i/UKB_DATA/imputed_UKB/mfi.kt'
@@ -26,3 +29,11 @@ results=results.annotate(chr = mfi_table.chr,
                          info = mfi_table.info)
 
 results.export(EXPORTED_RESULTS)
+
+## .mfi has some pos and chr missing, fix that by extracting it from locus
+#df = pd.read_csv(EXPORTED_RESULTS, sep='\t')
+#CHR = np.array([df['locus'][i].split(":")[0] for i in range(len(df))]).astype('uint8')
+#POS = np.array([df['locus'][i].split(":")[1] for i in range(len(df))]).astype('uint')
+#df['chr'] = CHR
+#df['pos'] = POS
+#df.to_csv(EXPORTED_RESULTS, sep='\t', index=0)

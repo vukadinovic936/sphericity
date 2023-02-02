@@ -1,0 +1,6 @@
+python ldsc.py \
+--h2 si.sumstats.gz \
+--ref-ld-chr data/eur_w_ld_chr/ \
+--w-ld-chr data/eur_w_ld_chr/ \
+--out si_h2
+less si_h2.log

@@ -256,13 +256,15 @@ def segment_papillary(image_path, seg_image_path, thres = 0.35, label=1):
 
     return image,masked_image,pixdim
 
-def create_video(orig_image,masked_image,cut=0, label=0):
+def create_video(orig_image,masked_image,cut=0, label=0, our = 20, ukb=20):
     fig, ax = plt.subplots()
     plt.close()
     def animator(N): # N is the animation frame number
         ax.imshow(orig_image[:,:,cut,N], cmap='gray') # I would add interpolation='none'
         data_masked = np.ma.masked_where(masked_image[:,:,cut,N] == label, masked_image[:,:,cut,N])
         ax.imshow(data_masked,interpolation = 'none', vmin=0, alpha=0.8)
+        if N==0:
+            ax.annotate(f"UKB:{ukb}, OURS:{our}",(0,0))
         ax.axis('off')
         return ax
     PlotFrames = range(0,masked_image.shape[3],1)
@@ -440,6 +442,9 @@ def segment_left_ventricle(image_path, seg_image_path, label=1):
     seg_nim = nib.load(seg_image_path)
     seg_image = seg_nim.get_fdata()
     pixdim = nim.header['pixdim'][1:4] 
+    if len(image.shape)==3: # If segmenting short-axis images, add new dimension
+        image = image[...,np.newaxis]
+        seg_image = seg_image[...,np.newaxis]
     # for loop here
     label=1
     masked_image = np.zeros_like(image)
@@ -453,6 +458,8 @@ def segment_left_ventricle(image_path, seg_image_path, label=1):
             imgray = (255*img).astype(np.uint8)
             contours, hierarchy = cv2.findContours(imgray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             mask=np.zeros(img.shape)
+            if len(contours) == 0: # Account for short-axis images with no visualization of ventricles
+                continue
             cont = contours[0]
             rect = cv2.minAreaRect(cont)
             box = cv2.boxPoints(rect)
@@ -629,6 +636,69 @@ def get_chin(img,seg,plot=False):
     Y = r1-r4+center_displacement
 
     return X/Y, (r1-r3)
+
+def simpson_ventricle_volume(image_path, seg_image_path, label):
+    """
+        Args 
+            str image_path - path to short-axis ED or ES image 
+            str seg_image_path - path to short-axis ED or ES segmented image 
+            int label - 1 for LV, 3 for RV 
+        Calculates ventricular volume using Simpson's method 
+        (area of endocardial contour*slice thickness)
+        
+    """
+    nim = nib.load(image_path)
+    image = nim.get_fdata()
+    seg_nim = nib.load(seg_image_path)
+    seg_image = seg_nim.get_fdata()
+    pixdim = nim.header['pixdim'][1:4] 
+    vol_pix = 1e-3*pixdim[0]*pixdim[1]*pixdim[2]
+#     if len(image.shape)==3: # If segmenting short-axis images, add new dimension
+#         image = image[...,np.newaxis]
+#         seg_image = seg_image[...,np.newaxis]
+    # for loop here
+    masked_image = np.zeros_like(image)
+    area = [] # Array where index is cut and value is area 
+#     shape_properties = np.zeros((image.shape[2],image.shape[3],3))
+    if image.shape[2] < 10: 
+        print('Invalid segmentation -- not enough cuts')
+        return
+    else: 
+        for cut in range(image.shape[2]):
+            if cut < image.shape[2]-1: 
+                slice_gap = 2e-1 # 2 mm to cm 
+                vol_pix = 1e-3*pixdim[0]*pixdim[1]*(pixdim[2]+slice_gap)
+            frame = image[:,:,cut]
+            seg_frame = seg_image[:,:,cut]
+            img =  (frame) * (seg_frame==label)
+            img = img/np.max(img)
+            imgray = (255*img).astype(np.uint8)
+            contours, hierarchy = cv2.findContours(imgray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            mask=np.zeros(img.shape)
+            if len(contours) == 0: # Account for short-axis images with no visualization of ventricles
+                continue
+            cont = contours[0]
+            area.append(cv2.contourArea(cont))
+            rect = cv2.minAreaRect(cont)
+            box = cv2.boxPoints(rect)
+            box = np.int0(box)
+            cv2.drawContours(mask,[box], 0,(255,0,0),2)
+            _,(width,height),angle = rect
+            masked_image[:,:,cut] = mask
+    #         shape_properties[cut,frame_id,0] = width*pixdim[0]
+    #         shape_properties[cut,frame_id,1] = height*pixdim[0]
+    #         shape_properties[cut,frame_id,2] = angle
+
+            if(width*height<5):
+                print(f"Minor visualization:\n Width {width}\n Height {height} \n Cut {cut} \n VideoId{image_path}")
+                continue
+    #             raise ValueError('Segmentation is bad! Box area is too small')
+        volume = np.sum(area)*vol_pix
+        return image,masked_image,volume
+    return
+
+def get_volume_ratio(rv_vol, lv_vol,norm=1):
+    return rv_vol/lv_vol/norm
 
 def length_papillary(image_path, seg_image_path, thres = 0.35, label=1):
     """

@@ -31,3 +31,8 @@ PheWas/93
 *.rds
 *.rda
 small_datasets/*
+ldsc/test/*
+PheWas/patient_diag
+PheWas/patient_diag_filter
+PheWas/pheno_patient_diag
+PheWas/pheno_patient_diag_ecg

@@ -1,0 +1,7 @@
+# for liability scale binary traits need prevalence ( How many ppl were diagnosed from the population )
+# --samp-prev 0.5,nan --pop-prev 0.01,nan 
+python ldsc.py \
+--rg si.sumstats.gz \
+--ref-ld-chr data/eur_w_ld_chr/ \
+--w-ld-chr data/eur_w_ld_chr/ \
+--out scz_h2
