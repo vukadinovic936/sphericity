@@ -8,7 +8,7 @@ UK Biobank data is availabe upon request at https://www.ukbiobank.ac.uk
 ## Getting Started
 
 We provide a yaml file to setup a conda environment with all the requirements. 
-Run `conda env create -f environment.yml`\
+Run `conda env create -f environment.yml` to get started
 
 ExamplePipeline.ipynb demonstrates all steps necessary to extract sphericity index from long axis cardiac MRI.
 
