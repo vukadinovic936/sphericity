@@ -256,15 +256,13 @@ def segment_papillary(image_path, seg_image_path, thres = 0.35, label=1):
 
     return image,masked_image,pixdim
 
-def create_video(orig_image,masked_image,cut=0, label=0, our = 20, ukb=20):
+def create_video(orig_image,masked_image,cut=0, label=0):
     fig, ax = plt.subplots()
     plt.close()
     def animator(N): # N is the animation frame number
         ax.imshow(orig_image[:,:,cut,N], cmap='gray') # I would add interpolation='none'
         data_masked = np.ma.masked_where(masked_image[:,:,cut,N] == label, masked_image[:,:,cut,N])
         ax.imshow(data_masked,interpolation = 'none', vmin=0, alpha=0.8)
-        if N==0:
-            ax.annotate(f"UKB:{ukb}, OURS:{our}",(0,0))
         ax.axis('off')
         return ax
     PlotFrames = range(0,masked_image.shape[3],1)
@@ -475,6 +473,40 @@ def segment_left_ventricle(image_path, seg_image_path, label=1):
                 print(f"Width {width}\n Height {height} \n Frame_Id {frame_id} \n VideoId{image_path}")
                 raise ValueError('Segmentation is bad! Box area is too small')
     return image,masked_image,shape_properties
+
+def extract_si(image, seg_image):
+    """
+    Args
+        image np array
+            ED frame
+        seg_image np array
+            Segmented ED Frame
+    Return
+    """
+    masked_image = np.zeros_like(image)
+    frame = image
+    seg_frame = seg_image
+    img =  (frame) * (seg_frame==1)
+    img = img/np.max(img)
+    imgray = (255*img).astype(np.uint8)
+    contours, hierarchy = cv2.findContours(imgray, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    mask=np.zeros(img.shape)
+    cont = max(contours, key = cv2.contourArea)
+    rect = cv2.minAreaRect(cont)
+    box = cv2.boxPoints(rect)
+    box = np.int0(box)
+    cv2.drawContours(mask,[box], 0,(255,0,0),2)
+    _,(width,height),angle = rect
+    masked_image = mask
+    # height is the greater side
+    if width > height:
+        temp=width
+        width=height
+        height=temp
+
+    si=width/height
+
+    return image,masked_image,si
 
 def segment_left_ventricle_ED(image_path, seg_image_path, label=1, qc=True):
     

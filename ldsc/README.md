@@ -1,3 +1,27 @@
+# This is our fork of LDSC v1.0.1
+Follow the following steps to reproduce our results:
+Given GWAS summary statistics we can compute trait heritability:
+ 1. Convert exported_results.tsv (generated from step 8 of GWAS) in suitable format by running the notebook ldsc/Reformat.ipynb
+
+ 2. Open bash shell (or WSL2), navigate to ldsc folder and activate ldsc conda environment. If you didn't install the ldsc conda environment previously, do so with the following command conda `conda env create -f ldsc/enviroment.yml'
+
+ ` conda activate ldsc `
+ 
+ 3. Move exported_results.txt (generated from 1) to ldsc/data/exported_results.txt
+
+ 4. Run (If needed change the number of samples in the cohort inside munge.rc)
+
+ `./munge.rc`
+
+ 5. For heritability results run:
+
+`./heri.rc`
+
+Given two GWAS summary statistics on different traits we can compute genetic correlation of these two traits.
+
+Do steps 1-4 like above for two differnt phenotypes. You have to change input and output values in munge.rc. --sumstats is input  --out is output
+
+Then change `ld_reg.rc` appropriately (change si.sumstats.gz, cardiom.sumstats.gz to your files) and run it.
 
 # LDSC (LD SCore) `v1.0.1`
 

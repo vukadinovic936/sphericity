@@ -1,9 +1,3 @@
 [submodule "ukbb_cardiac"]
 	path = ukbb_cardiac
 	url = https://github.com/vukadinovic936/ukbb_cardiac
-[submodule "RSSNET/rss"]
-	path = RSSNET/rss
-	url = https://github.com/vukadinovic936/rss
-[submodule "RSSNET/rss-net"]
-	path = RSSNET/rss-net
-	url = https://github.com/vukadinovic936/rss-net

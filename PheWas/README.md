@@ -1,5 +1,5 @@
-To run the PheWas for your own phenotype, modify the line 
+# PheWas
 
-imaging=pd.read_csv("I:/UKB_DATA/tsv_pheno/BSA_width.tsv", sep='\t',index_col=0) 
+First we convert ICD codes to Phecodes using the notebook `Map_ICD10_PheCodes.ipynb'. We save data in the dictionary patient_diag.
 
-in PheWas.ipynb
+Next, we run `PheWas.ipynb` which will give us tabular result and a pretty pdf PheWas plot.

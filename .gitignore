@@ -1,4 +1,3 @@
-*.gz
 *.csv
 *.pyc
 *.txt
@@ -36,3 +35,7 @@ PheWas/patient_diag
 PheWas/patient_diag_filter
 PheWas/pheno_patient_diag
 PheWas/pheno_patient_diag_ecg
+seg*
+*_ED*
+*_ES*
+*.Rproj
