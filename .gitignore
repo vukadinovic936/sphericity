@@ -1,10 +1,10 @@
-*.csv
 *.pyc
 *.txt
 *.png
 *.jpg
 *.mat
-data
+PheWas/data
+ldsc/data
 *.phe
 *.fam
 *.bed
